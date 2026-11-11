@@ -1,17 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import 'profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final provider = UserProvider.of(context);
+    final provider = context.watch<UserProvider>(); // Latihan 4: Consumer/Provider access
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        actions: [
+          // Latihan 1: Toggle Dark Mode di AppBar Home
+          IconButton(
+            icon: Icon(
+              provider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+            ),
+            onPressed: () => provider.toggleTheme(),
+            tooltip: 'Ubah Tema',
+          ),
+        ],
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -22,9 +35,25 @@ class HomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.home, size: 80, color: Colors.deepPurple),
+                    const SizedBox(height: 16),
+
+                    // Latihan 2: Menampilkan Counter Kunjungan
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Aplikasi dibuka: ${provider.visitCount} kali',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                    ),
 
                     const SizedBox(height: 24),
-
                     Text(
                       provider.user.isLoggedIn
                           ? 'Selamat datang, ${provider.user.name}!'
@@ -33,10 +62,8 @@ class HomeScreen extends StatelessWidget {
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
-
                       textAlign: TextAlign.center,
                     ),
-
                     const SizedBox(height: 16),
                     if (provider.user.isLoggedIn) ...[
                       Text(
@@ -46,7 +73,6 @@ class HomeScreen extends StatelessWidget {
                           color: Colors.grey,
                         ),
                       ),
-
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
                         onPressed: () {
@@ -57,7 +83,6 @@ class HomeScreen extends StatelessWidget {
                             ),
                           );
                         },
-
                         icon: const Icon(Icons.person),
                         label: const Text('Lihat Profil'),
                       ),
@@ -71,7 +96,6 @@ class HomeScreen extends StatelessWidget {
                             ),
                           );
                         },
-
                         icon: const Icon(Icons.login),
                         label: const Text('Login / Daftar'),
                       ),

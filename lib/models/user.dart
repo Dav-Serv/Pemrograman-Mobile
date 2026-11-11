@@ -2,11 +2,13 @@ class User {
     final String name;
     final String email;
     final bool isLoggedIn;
+    final List<String> favorites;
 
     User({
         required this.name,
         required this.email,
         this.isLoggedIn = false,
+        this.favorites = const [],
     });
 
     // Konversi ke Map untuk disimpan
@@ -15,6 +17,7 @@ class User {
             'name': name,
             'email': email,
             'isLoggedIn': isLoggedIn,
+            'favorites': favorites,
         };
     }
 
@@ -24,6 +27,7 @@ class User {
             name: map['name'] ?? '',
             email: map['email'] ?? '',
             isLoggedIn: map['isLoggedIn'] ?? false,
+            favorites: List<String>.from(map['favorites'] ?? []),
         );
     }
 
@@ -32,11 +36,13 @@ class User {
         String? name,
         String? email,
         bool? isLoggedIn,
+        List<String>? favorites,
     }) {
         return User(
             name: name ?? this.name,
             email: email ?? this.email,
             isLoggedIn: isLoggedIn ?? this.isLoggedIn,
+            favorites: favorites ?? this.favorites,
         );
     }
 }

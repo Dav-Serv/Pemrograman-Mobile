@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 import 'screen/home_screen.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(
+    // Latihan 4: Menggunakan ChangeNotifierProvider
+    ChangeNotifierProvider(
+      create: (_) => UserProvider(),
+      child: const MainApp(),
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -11,16 +18,29 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return UserProviderWrapper(
-      child: MaterialApp(
-        title: 'State & Preferences',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
+    // Latihan 1 & 4: Membaca state tema dari Provider
+    final provider = context.watch<UserProvider>();
+
+    return MaterialApp(
+      title: 'State & Preferences',
+      debugShowCheckedModeBanner: false,
+      // Latihan 1: Tema Terang dan Gelap
+      themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.light,
         ),
-        home: const HomeScreen(),
+        useMaterial3: true,
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      home: const HomeScreen(),
     );
   }
 }
