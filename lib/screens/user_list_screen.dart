@@ -4,20 +4,34 @@ import '../services/api_service.dart';
 import '../widgets/user_card.dart';
 
 class UserListScreen extends StatefulWidget {
-  const UserListScreen({super.key});
+  final Duration timeout;
+  const UserListScreen({
+    super.key,
+    this.timeout = const Duration(seconds: 10),
+  });
+
   @override
   State<UserListScreen> createState() => _UserListScreenState();
 }
 
 class _UserListScreenState extends State<UserListScreen> {
   final ApiService _apiService = ApiService();
+  final TextEditingController _searchController = TextEditingController();
   List<User> _users = [];
+  List<User> _filteredUsers = [];
   bool _isLoading = true;
   String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
     _loadUsers();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUsers() async {
@@ -25,10 +39,12 @@ class _UserListScreenState extends State<UserListScreen> {
       _isLoading = true;
       _errorMessage = null;
     });
+
     try {
-      final users = await _apiService.getUsers();
+      final users = await _apiService.getUsers(timeout: widget.timeout);
       setState(() {
         _users = users;
+        _filteredUsers = users;
         _isLoading = false;
       });
     } catch (e) {
@@ -39,11 +55,22 @@ class _UserListScreenState extends State<UserListScreen> {
     }
   }
 
+  // Latihan 4: Filter real-time berdasarkan nama atau email
+  void _filterUsers(String query) {
+    final keyword = query.toLowerCase();
+    setState(() {
+      _filteredUsers = _users.where((user) {
+        return user.name.toLowerCase().contains(keyword) ||
+            user.email.toLowerCase().contains(keyword);
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Pengguna'),
+        title: Text('Daftar Pengguna (${widget.timeout.inSeconds}s)'),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         actions: [
@@ -54,12 +81,37 @@ class _UserListScreenState extends State<UserListScreen> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _filterUsers,
+              decoration: InputDecoration(
+                labelText: 'Cari Pengguna',
+                hintText: 'Ketik nama atau email...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _filterUsers('');
+                        },
+                      )
+                    : null,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
+          Expanded(child: _buildBody()),
+        ],
+      ),
     );
   }
 
   Widget _buildBody() {
-    // Loading state
     if (_isLoading) {
       return const Center(
         child: Column(
@@ -72,7 +124,7 @@ class _UserListScreenState extends State<UserListScreen> {
         ),
       );
     }
-    // Error state
+
     if (_errorMessage != null) {
       return Center(
         child: Padding(
@@ -103,22 +155,20 @@ class _UserListScreenState extends State<UserListScreen> {
         ),
       );
     }
-    // Empty state
-    if (_users.isEmpty) {
-      return const Center(child: Text('Tidak ada data pengguna'));
+
+    if (_filteredUsers.isEmpty) {
+      return const Center(child: Text('Tidak ada data pengguna yang cocok'));
     }
-    // Success state
+
     return RefreshIndicator(
       onRefresh: _loadUsers,
       child: ListView.builder(
-        itemCount: _users.length,
+        itemCount: _filteredUsers.length,
         itemBuilder: (context, index) {
-          final user = _users[index];
+          final user = _filteredUsers[index];
           return UserCard(
             user: user,
-            onTap: () {
-              _showUserDetail(user);
-            },
+            onTap: () => _showUserDetail(user),
           );
         },
       ),
@@ -138,7 +188,6 @@ class _UserListScreenState extends State<UserListScreen> {
               user.name,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 8),
             Text('Username: ${user.username}'),
             Text('Email: ${user.email}'),
