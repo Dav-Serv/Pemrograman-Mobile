@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/user.dart';
+import '../models/post.dart';
 
 /// Service untuk komunikasi HTTP dengan REST API.
 ///
