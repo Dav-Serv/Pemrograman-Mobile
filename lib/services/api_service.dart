@@ -67,6 +67,36 @@ class ApiService {
     }
   }
 
+  /// Mengambil daftar post dari endpoint `/posts`.
+  Future<List<Post>> getPosts() async {
+    try {
+      _logRequest('GET', '/posts');
+      final response = await _client
+          .get(
+            Uri.parse('$_baseUrl/posts'),
+            headers: _buildHeaders(),
+          )
+          .timeout(Duration(seconds: AppConfig.timeoutSeconds));
+
+      _logResponse(response.statusCode);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => Post.fromJson(json)).toList();
+      } else {
+        throw Exception('Gagal memuat post. Status: ${response.statusCode}');
+      }
+    } on TimeoutException {
+      throw Exception('Request timeout. Periksa koneksi internet Anda.');
+    } on SocketException {
+      throw Exception('Tidak ada koneksi internet. Periksa jaringan Anda.');
+    } on FormatException {
+      throw Exception('Format data post tidak valid.');
+    } catch (e) {
+      throw Exception('Terjadi kesalahan: $e');
+    }
+  }
+
   /// Membangun header untuk request HTTP.
   ///
   /// Menyertakan API key dari konfigurasi (tidak di-hardcode).
